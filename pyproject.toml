@@ -1,0 +1,23 @@
+[project]
+name = "seat-notifier"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jeff Zhang", email = "jeff@39bytes.dev" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.13,<4",
+    "beautifulsoup4>=4.14,<5",
+    "pyotp>=2.9,<3",
+    "python-dotenv>=1.1,<2",
+    "selenium>=4.40,<5",
+]
+
+[project.scripts]
+seat-notifier = "seat_notifier:main"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13.0"]
+build-backend = "uv_build"

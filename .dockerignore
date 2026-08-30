@@ -1,0 +1,14 @@
+.git
+.jj
+.venv
+__pycache__
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.cookies.json
+minerva-cookies.json
+build
+dist
+.pytest_cache
+.ruff_cache
