@@ -209,7 +209,7 @@ uv run seat-notifier --auto-login waitlist-add \
 
 Possible results include `added-to-waitlist`, `already-on-waitlist`, `waitlist-full`, `registered-directly`, and `rejected`. A full or rejected waitlist exits unsuccessfully. Network failures during automatic mode remain pending for retry, while a `waitlist-full` response waits for a future newly detected opening.
 
-After `added-to-waitlist`, `already-on-waitlist`, or `registered-directly`, the poller sends a separate success notification and removes that entire course from the active polling set. Other watched courses continue normally; when none remain, the process exits without waiting for another interval.
+After `added-to-waitlist`, `already-on-waitlist`, or `registered-directly`, the poller sends a low-priority completion notification and removes that entire course from the active polling set. A successful automatic action suppresses the pending opening alert, so only the completion notification is delivered. Other watched courses continue normally; when none remain, the process exits without waiting for another interval.
 
 **Important:** Banner's required first step is a regular Quick Add (`RW`). If a regular seat becomes available before that request is processed, Banner may register the CRN directly instead of offering the waitlist. The client reports this as `registered-directly`. Verify prerequisites, restrictions, schedule conflicts, credit limits, multi-term rules, and institutional policy before enabling this option.
 
@@ -232,9 +232,9 @@ Test both notification channels without loading Minerva cookies or launching Fir
 uv run seat-notifier notify-test
 ```
 
-Use `--no-dbus` to test only ntfy, or `--no-ntfy` to test only the desktop notification. The ntfy test uses the same topic, token, priority, and Minerva click destination as real alerts.
+Use `--no-dbus` to test only ntfy, or `--no-ntfy` to test only the desktop notification. The ntfy test uses the same topic, token, low priority, and Minerva click destination as completion alerts.
 
-Each newly detected opening sends a high-priority notification containing the course, section, CRN, old availability, and new availability. Clicking the ntfy notification opens Minerva's registration menu. Override that destination with `MINERVA_REGISTRATION_URL`; for safety, click targets are restricted to HTTPS on `horizon.mcgill.ca`.
+Each newly detected opening sends a low-priority notification containing the course, section, CRN, old availability, and new availability. If automatic waitlisting succeeds, that opening alert is suppressed in favor of the low-priority completion notification. Clicking the ntfy notification opens Minerva's registration menu. Override that destination with `MINERVA_REGISTRATION_URL`; for safety, click targets are restricted to HTTPS on `horizon.mcgill.ca`.
 
 Delivery and retries are tracked separately per channel, so a D-Bus failure does not duplicate a successful ntfy alert. Failed deliveries remain pending and retry on subsequent polling cycles. Disable channels with `--no-ntfy` and/or `--no-dbus`.
 

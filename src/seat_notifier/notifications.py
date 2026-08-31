@@ -81,27 +81,28 @@ class DbusNotifier:
             section.section,
             section.crn,
         )
-        self._send(title, body)
+        self._send(title, body, urgency="low")
 
     def notify_registration(
         self, opening: AvailabilityOpening, result: WaitlistResult
     ) -> None:
         title, body = _registration_notification(opening, result)
         logger.info("sending D-Bus registration-success notification")
-        self._send(title, body)
+        self._send(title, body, urgency="low")
 
     def send_test(self) -> None:
         logger.info("sending test D-Bus notification")
         self._send(
             "seat-notifier test",
             "Desktop notifications are configured successfully.",
+            urgency="low",
         )
 
-    def _send(self, title: str, body: str) -> None:
+    def _send(self, title: str, body: str, *, urgency: str) -> None:
         command = [
             "notify-send",
             "--app-name=seat-notifier",
-            "--urgency=critical",
+            f"--urgency={urgency}",
             "--icon=dialog-information",
             title,
             body,
@@ -174,14 +175,24 @@ class NtfyNotifier:
             section.section,
             section.crn,
         )
-        self._send(title, message, tags="school,rotating_light")
+        self._send(
+            title,
+            message,
+            tags="school,rotating_light",
+            priority="low",
+        )
 
     def notify_registration(
         self, opening: AvailabilityOpening, result: WaitlistResult
     ) -> None:
         title, message = _registration_notification(opening, result)
         logger.info("sending ntfy registration-success notification")
-        self._send(title, message, tags="school,white_check_mark")
+        self._send(
+            title,
+            message,
+            tags="school,white_check_mark",
+            priority="low",
+        )
 
     def send_test(self) -> None:
         """Send a test alert using the same topic and click destination."""
@@ -190,12 +201,20 @@ class NtfyNotifier:
             "seat-notifier test",
             "Test notification delivered successfully. Click to open Minerva.",
             tags="school,white_check_mark",
+            priority="low",
         )
 
-    def _send(self, title: str, message: str, *, tags: str) -> None:
+    def _send(
+        self,
+        title: str,
+        message: str,
+        *,
+        tags: str,
+        priority: str,
+    ) -> None:
         headers = {
             "Title": title,
-            "Priority": "high",
+            "Priority": priority,
             "Tags": tags,
             "Click": self.click_url,
             "Content-Type": "text/plain; charset=utf-8",

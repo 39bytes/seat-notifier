@@ -245,6 +245,33 @@ class CourseTests(unittest.TestCase):
         self.assertEqual(cast(Any, opening).section.crn, "2329")
         self.assertEqual(cast(Any, result).outcome, WaitlistOutcome.ADDED)
 
+    def test_successful_automatic_add_suppresses_opening_alert(self) -> None:
+        baseline = parse_course_sections(SECTIONS_HTML)
+        changed = [
+            replace(baseline[0], waitlist_enrolled=35, waitlist_remaining=1),
+            baseline[1],
+        ]
+        registrar = SuccessfulWaitlistRegistrar()
+        notifier = RecordingNotifier()
+
+        with (
+            patch(
+                "seat_notifier.courses.search_course",
+                side_effect=[baseline, changed],
+            ),
+            patch("seat_notifier.courses.time.sleep"),
+            redirect_stdout(StringIO()),
+        ):
+            poll_course(
+                cast(Any, object()),
+                CourseQuery("202609", "COMP", "350"),
+                notifiers=[notifier],
+                waitlist_registrar=cast(Any, registrar),
+            )
+
+        self.assertEqual(notifier.calls, [])
+        self.assertEqual(len(notifier.registrations), 1)
+
     def test_successful_course_is_removed_while_other_courses_continue(self) -> None:
         baseline = parse_course_sections(SECTIONS_HTML)
         open_waitlist = [

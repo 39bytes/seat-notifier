@@ -538,6 +538,17 @@ def poll_courses(
                     )
                     completed_queries.add(query)
                     for notifier_index, notifier in enumerate(configured_notifiers):
+                        # A successful automatic action supersedes the opening
+                        # alert: only report the completed registration outcome.
+                        pending_notifications.pop(
+                            (
+                                notifier_index,
+                                query.term,
+                                crn,
+                                opening.pool,
+                            ),
+                            None,
+                        )
                         notification_key = (notifier_index, query.term, crn)
                         pending_registration_notifications[notification_key] = (
                             notifier,

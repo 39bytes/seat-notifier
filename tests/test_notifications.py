@@ -24,7 +24,7 @@ class DbusNotifierTests(unittest.TestCase):
 
         command = mocked_run.call_args.args[0]
         self.assertEqual(command[0], "notify-send")
-        self.assertIn("--urgency=critical", command)
+        self.assertIn("--urgency=low", command)
         self.assertIn("Waitlist spot opened: COMP 350", command)
         self.assertIn("COMP 350-001, CRN 2329", command[-1])
         self.assertIn("0 → 1", command[-1])
@@ -40,6 +40,7 @@ class DbusNotifierTests(unittest.TestCase):
             notifier.notify_registration(opening, result)
 
         command = mocked_run.call_args.args[0]
+        self.assertIn("--urgency=low", command)
         self.assertIn("Added to waitlist: COMP 350", command)
         self.assertIn("CRN 2329", command[-1])
 
@@ -47,7 +48,9 @@ class DbusNotifierTests(unittest.TestCase):
         notifier = DbusNotifier()
         with patch("seat_notifier.notifications.subprocess.run") as mocked_run:
             notifier.send_test()
-        self.assertIn("seat-notifier test", mocked_run.call_args.args[0])
+        command = mocked_run.call_args.args[0]
+        self.assertIn("--urgency=low", command)
+        self.assertIn("seat-notifier test", command)
 
 
 class NtfyNotifierTests(unittest.TestCase):
@@ -66,7 +69,7 @@ class NtfyNotifierTests(unittest.TestCase):
         body, headers = awaited.args
         self.assertEqual(headers["Title"], "Waitlist spot opened: COMP 350")
         self.assertEqual(headers["Click"], DEFAULT_REGISTRATION_URL)
-        self.assertEqual(headers["Priority"], "high")
+        self.assertEqual(headers["Priority"], "low")
         self.assertEqual(headers["Authorization"], "Bearer secret-token")
         message = body.decode()
         self.assertIn("COMP 350-001, CRN 2329", message)
@@ -86,6 +89,7 @@ class NtfyNotifierTests(unittest.TestCase):
         assert awaited is not None
         body, headers = awaited.args
         self.assertEqual(headers["Title"], "Registered: COMP 350")
+        self.assertEqual(headers["Priority"], "low")
         self.assertIn("CRN 2329", body.decode())
 
     def test_sends_test_notification(self) -> None:
@@ -101,6 +105,7 @@ class NtfyNotifierTests(unittest.TestCase):
         body, headers = awaited.args
         self.assertEqual(headers["Title"], "seat-notifier test")
         self.assertEqual(headers["Click"], DEFAULT_REGISTRATION_URL)
+        self.assertEqual(headers["Priority"], "low")
         self.assertIn("Test notification delivered successfully", body.decode())
 
     def test_rejects_non_minerva_click_target(self) -> None:
