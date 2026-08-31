@@ -13,6 +13,7 @@ from seat_notifier import (
     _environment_flag,
     _load_root_dotenv,
     _parser,
+    _poll_interval,
     _poll_queries,
     main,
 )
@@ -25,6 +26,23 @@ class CliTests(unittest.TestCase):
 
         with patch.dict(os.environ, {"MINERVA_AUTO_WAITLIST": "false"}, clear=True):
             self.assertFalse(_environment_flag("MINERVA_AUTO_WAITLIST"))
+
+    def test_reads_poll_interval_from_environment(self) -> None:
+        parser = _parser()
+        environment_args = parser.parse_args(["poll"])
+        cli_args = parser.parse_args(["--interval", "15", "poll"])
+
+        with patch.dict(os.environ, {"MINERVA_POLL_INTERVAL": "45.5"}, clear=True):
+            self.assertEqual(_poll_interval(environment_args), 45.5)
+            self.assertEqual(_poll_interval(cli_args), 15.0)
+
+    def test_rejects_invalid_poll_interval_from_environment(self) -> None:
+        args = _parser().parse_args(["poll"])
+        with (
+            patch.dict(os.environ, {"MINERVA_POLL_INTERVAL": "never"}, clear=True),
+            self.assertRaisesRegex(ValueError, "must be a number"),
+        ):
+            _poll_interval(args)
 
     def test_reads_poll_term_and_courses_from_environment(self) -> None:
         parser = _parser()

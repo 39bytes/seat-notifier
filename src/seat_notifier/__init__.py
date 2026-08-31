@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import math
 import os
 import re
 from http.cookiejar import CookieJar
@@ -110,9 +111,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--interval",
         type=float,
-        default=60,
         metavar="SECONDS",
-        help="polling interval (default: 60)",
+        help="polling interval (default: MINERVA_POLL_INTERVAL or 60)",
     )
     parser.add_argument(
         "--once",
@@ -203,6 +203,21 @@ def _environment_flag(name: str) -> bool:
     if normalized in {"0", "false", "no", "off"}:
         return False
     raise ValueError(f"{name} must be true or false")
+
+
+def _poll_interval(args: argparse.Namespace) -> float:
+    configured = (
+        str(args.interval)
+        if args.interval is not None
+        else os.environ.get("MINERVA_POLL_INTERVAL", "60")
+    )
+    try:
+        interval = float(configured)
+    except ValueError as error:
+        raise ValueError("MINERVA_POLL_INTERVAL must be a number") from error
+    if not math.isfinite(interval) or interval <= 0:
+        raise ValueError("polling interval must be a positive finite number")
+    return interval
 
 
 def _poll_queries(
@@ -343,6 +358,10 @@ def main() -> None:
 
     if args.command == "poll":
         queries = _poll_queries(args, parser)
+        try:
+            poll_interval = _poll_interval(args)
+        except ValueError as error:
+            parser.error(str(error))
         notifiers = []
         if not args.no_notify:
             notifiers.append(_ntfy_notifier(args, parser))
@@ -388,7 +407,7 @@ def main() -> None:
             poll_courses(
                 client,
                 queries,
-                interval=args.interval,
+                interval=poll_interval,
                 once=args.once,
                 notifiers=notifiers,
                 waitlist_registrar=waitlist_registrar,

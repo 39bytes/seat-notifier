@@ -125,6 +125,7 @@ Configure the term and fully-qualified courses in the root `.env`. Separate cour
 ```dotenv
 MINERVA_TERM=202609
 MINERVA_COURSES=COMP:350,MATH:240 ECSE:205
+MINERVA_POLL_INTERVAL=60
 ```
 
 Then start polling without repeating them on the command line:
@@ -133,7 +134,7 @@ Then start polling without repeating them on the command line:
 uv run seat-notifier --auto-login poll
 ```
 
-Explicit `--term` and `--course` arguments remain available and override these environment values.
+Explicit `--term`, `--course`, and `--interval` arguments remain available and override these environment values.
 
 Check once:
 
@@ -174,7 +175,7 @@ uv run seat-notifier --auto-login poll \
 
 All courses share one polling interval and authenticated session, while maintaining independent previous-state and notification-delivery tracking. Duplicate course specifications are ignored.
 
-Set a different interval with `--interval SECONDS`. The command prints the initial Lecture-section state, then only reports increases in relevant availability compared with the immediately preceding poll. Capacity decreases, room/instructor changes, and other metadata changes do not produce an availability report. Logs still record checks with no opening. Stop continuous polling with Ctrl-C.
+Set a different interval with `MINERVA_POLL_INTERVAL` or `--interval SECONDS`; the CLI argument takes precedence. The command prints the initial Lecture-section state, then only reports increases in relevant availability compared with the immediately preceding poll. Capacity decreases, room/instructor changes, and other metadata changes do not produce an availability report. Logs still record checks with no opening. Stop continuous polling with Ctrl-C.
 
 Only rows whose Banner type is exactly `Lecture` are tracked; exams, labs, tutorials, notes, spacer rows, and secondary meeting rows are ignored. If `WL Act` is greater than zero, the poller tracks `WL Rem` and reports only when that count increases (`WAITLIST SPOT OPENED`). Otherwise, it tracks regular `Rem` and reports when that count increases (`SEAT OPENED`). The initial display uses `WAITLIST OPEN`/`WAITLIST FULL` when a waitlist queue exists and `OPEN`/`CLOSED` otherwise.
 
@@ -267,7 +268,7 @@ To opt in to automatic waitlisting, also set:
 MINERVA_AUTO_WAITLIST=true
 ```
 
-Optionally set `NTFY_SERVER`, `NTFY_TOKEN`, or `MINERVA_REGISTRATION_URL`. Do not set `PORT`; Railway supplies it. No `.env` or browser cookies are copied into the image.
+Optionally set `MINERVA_POLL_INTERVAL`, `NTFY_SERVER`, `NTFY_TOKEN`, or `MINERVA_REGISTRATION_URL`. Do not set `PORT`; Railway supplies it. No `.env` or browser cookies are copied into the image.
 
 ### Health server
 
